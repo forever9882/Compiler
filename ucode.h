@@ -49,6 +49,10 @@ typedef struct _Label{
     int type; //{ BACK_CONDITION, ESCAPE }
 } Label;
 
+<<<<<<< HEAD
+=======
+char* msg[9];
+>>>>>>> moon
 void codeGen(Node *ptr, FILE *ucoFile);
 
 #endif
