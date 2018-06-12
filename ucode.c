@@ -6,13 +6,25 @@
 
 void processOperator(SymbolTable *table, Node *ptr);
 
+
+
 //GLOBAL VARIABLE
 FILE* file;
 int lvalue;
 int flag_returned;
 SymbolTable* rootTable;
 Label labelTable[LABEL_MAX];
-
+char* message[9]={
+    "0: Not yet implemented"
+    ,"1: LabelTable is fulled"
+    ,"2: Dosen't have FUNC_HEAD"
+    ,"3: Dosen't have FUNC_DEF or DCL"
+    ,"4: Not DCL_SPEC"
+    ,"5: Not DCL_ITEM"
+    ,"6: dosen't have SIMPLE_VAR or ARRAY_VAR"
+    ,"7: Invalid function return type"
+    ,"8: Doesn't have PARAM_DCL"
+};
 
 void display(SymbolTable* table, int indent)
 {
@@ -65,8 +77,8 @@ void display(SymbolTable* table, int indent)
 
 void icg_error(int i)
 {
-    printf("ERROR: %s\n",msg4[i]);
-    fprintf(stderr, "ERROR: %s\n", msg4[i]);
+    printf("ERROR: %s\n",message[i]);
+    fprintf(stderr, "ERROR: %s\n", message[i]);
 }
 
 void emit0(char *opcode)
