@@ -1,4 +1,4 @@
-#ifndef __UCODE_HEADER
+﻿#ifndef __UCODE_HEADER
 #define __UCODE_HEADER
 
 #include "minic_ast.h"
@@ -49,7 +49,6 @@ typedef struct _Label{
     int type; //{ BACK_CONDITION, ESCAPE }
 } Label;
 
-char* msg[9];
 void codeGen(Node *ptr, FILE *ucoFile);
 
 #endif
