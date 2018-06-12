@@ -1,7 +1,3 @@
-//using for
-//using continue
-//using break
-
 int main(){
     int i;
     for(i=0;i<30;i++){

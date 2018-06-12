@@ -69,6 +69,7 @@ sym    =  1
   ****  Dynamic instruction counts  ****
 
 
+<<<<<<< HEAD
 inc    =  20        mod    =  20        lt     =  21        eq     =  41        
 lod    =  92        ldc    =  84        ldp    =  11        str    =  21        
 ujp    =  31        fjp    =  62        call   =  11        retv   =  1         
@@ -78,3 +79,14 @@ sym    =  1
  Executable instruction count  =   416
 
  Total execution cycle         =   5675
+=======
+inc    =  20        mod    =  20        lt     =  21        eq     =  30        
+lod    =  81        ldc    =  73        ldp    =  11        str    =  21        
+ujp    =  30        fjp    =  51        call   =  11        retv   =  1         
+nop    =  62        proc   =  1         end    =  1         bgn    =  1         
+sym    =  1         
+
+ Executable instruction count  =   371
+
+ Total execution cycle         =   5225
+>>>>>>> master
