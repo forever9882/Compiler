@@ -49,18 +49,7 @@ typedef struct _Label{
     int type; //{ BACK_CONDITION, ESCAPE }
 } Label;
 
-char* message[9]={
-    "0: Not yet implemented"
-    ,"1: LabelTable is fulled"
-    ,"2: Dosen't have FUNC_HEAD"
-    ,"3: Dosen't have FUNC_DEF or DCL"
-    ,"4: Not DCL_SPEC"
-    ,"5: Not DCL_ITEM"
-    ,"6: dosen't have SIMPLE_VAR or ARRAY_VAR"
-    ,"7: Invalid function return type"
-    ,"8: Doesn't have PARAM_DCL"
-};
-
+char* msg[9];
 void codeGen(Node *ptr, FILE *ucoFile);
 
 #endif

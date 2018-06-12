@@ -65,8 +65,8 @@ void display(SymbolTable* table, int indent)
 
 void icg_error(int i)
 {
-    printf("ERROR: %s\n",message[i])
-    fprintf(stderr, "ERROR: %s\n", message[i]);
+    printf("ERROR: %s\n",msg4[i]);
+    fprintf(stderr, "ERROR: %s\n", msg4[i]);
 }
 
 void emit0(char *opcode)
