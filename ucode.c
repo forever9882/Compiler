@@ -793,7 +793,7 @@ void processStatement(SymbolTable *table, Node *ptr)
             emitLabel(label1);
             processCondition(table, ptr->son);
 
-            emitJump("fjp", label2); //조건문 바깥으로 빠져나가기
+            emitJump("fjp", label2); //escape
             processStatement(table, ptr->son->next);    // compound_st
 
             emitJump("ujp", label1); // 조건문으로 돌아가기
@@ -805,7 +805,7 @@ void processStatement(SymbolTable *table, Node *ptr)
             processOperator(table,p->son);
             
             genLabel(label1); //조건문으로 돌아가기
-            genLabel(label2); //조건문 바깥으로 빠져나가기
+            genLabel(label2); //escape
             genLabel(label3); //조건 변화식으로 가기
 
             controlLabel(PUSH,BACK_CONDITION,label3);
