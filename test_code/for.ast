@@ -39,7 +39,7 @@ Nonterminal: PROGRAM
                                 Nonterminal: CALL
                                     Terminal: write
                                     Nonterminal: ACTUAL_PARAM
-                                        Terminal: k
+                                        Terminal: i
                             Nonterminal: IF_ST
                                 Nonterminal: EQ
                                     Terminal: i
