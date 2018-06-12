@@ -1,0 +1,10 @@
+main       proc    1       2       2
+           sym     2       1       1
+not yet implemented.
+           ldc     0
+           retv
+           end
+           bgn     0
+           ldp
+           call    main
+           end
