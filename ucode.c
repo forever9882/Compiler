@@ -186,7 +186,7 @@ int insert(SymbolTable *table, char *id, Specifier spec, Qualifier qual, int off
 }
 
 
-void rv_emit(SymbolTable *table, Node *ptr)         // 자기가 짠거임..
+void rv_emit(SymbolTable *table, Node *ptr) // 자기가 짠거임..
 {
     int stIndex;
 
@@ -249,9 +249,10 @@ void processSimpleVariable(SymbolTable *table, Node *ptr, Specifier spec, Qualif
 
     } else { // variable type
         int size= typeSize(spec);
+
         insert(table, p->token.tokenValue, spec, qual, table->offset, 1, 0);
         table->offset += size;
- 
+        
     }
 }
 
@@ -288,7 +289,7 @@ void processDeclaration(SymbolTable *table, Node *ptr)      //ptr => DCL_SPEC
     }
 
     // step 1: process DCL_SPEC
-    spec = SPEC_INT;                // default type
+    spec = SPEC_INT;
     qual = QUAL_VAR;
 
     p = ptr->son;       // INT_NODE
@@ -299,6 +300,7 @@ void processDeclaration(SymbolTable *table, Node *ptr)      //ptr => DCL_SPEC
             qual = QUAL_CONST;
         } else { // AUTO, EXTERN, REGISTER, FLOAT, DOUBLE, SIGNED, UNSIGNED
             icg_error(0);
+            //printf("not yet implemented\n");
             return;
         }
         p = p->next;            // ex. int a, b, c;
@@ -374,6 +376,7 @@ int checkPredefined(SymbolTable *table, Node *ptr)
     int stIndex;
 
     functionName = p->token.tokenValue;
+
     if (strcmp(functionName, "read") == 0) {
         noArguments = 1;
 
@@ -639,7 +642,7 @@ void processOperator(SymbolTable *table, Node *ptr)
             char *functionName;
             int stIndex;
             int noArguments;
-
+            
             if (checkPredefined(table, p)) {
                 break;
             }
@@ -710,11 +713,13 @@ Label controlLabel(int cmd,int type,char* label){
     }
 }
 
-void processStatement(SymbolTable *table, Node *ptr){
+void processStatement(SymbolTable *table, Node *ptr)
+{
     Node *p;
+    char label1[LABEL_SIZE]={0}, label2[LABEL_SIZE]={0};
+    char label3[LABEL_SIZE]={0};
     Label escape,back;
     int case_num=0;
-    char label1[LABEL_SIZE]={0}, label2[LABEL_SIZE]={0};
 
     switch(ptr->token.tokenNumber) {
         case COMPOUND_ST:
@@ -801,15 +806,19 @@ void processStatement(SymbolTable *table, Node *ptr){
             
             genLabel(label1); //조건문으로 돌아가기
             genLabel(label2); //조건문 바깥으로 빠져나가기
-            controlLabel(PUSH,BACK_CONDITION,label1);
+            genLabel(label3); //조건 변화식으로 가기
+
+            controlLabel(PUSH,BACK_CONDITION,label3);
             controlLabel(PUSH,ESCAPE,label2);
 
             emitLabel(label1);
             processCondition(table,p->next->son); //조건문
             emitJump("fjp", label2);
 
-            processStatement(table,p->next->next); //{}
-            processCondition(table,p->next->son); //post inc
+            processStatement(table,p->next->next->next); //{}
+            emitLabel(label3);
+            processCondition(table,p->next->next);
+            
             emitJump("ujp",label1); //조건문으로 돌아가기
 
             emitLabel(label2); //{} 바깥.
@@ -882,7 +891,7 @@ void processStatement(SymbolTable *table, Node *ptr){
     }
 }
 
-void processFunction(SymbolTable *table, Node *ptr)         //func_def
+void processFunction(SymbolTable *table, Node *ptr)
 {
     int stIndex, i;
     char *functionName;
@@ -916,7 +925,7 @@ void processFunction(SymbolTable *table, Node *ptr)         //func_def
 
     emitProc(functionName, nextTable->offset - 1, nextTable->base, 2);
 
-    
+    // 지역변수
     for (i = 0; i < nextTable->count; i++) {
         emitSym("sym", nextTable->base, nextTable->rows[i].offset, nextTable->rows[i].width);
     }
