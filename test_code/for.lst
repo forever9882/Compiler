@@ -1,0 +1,80 @@
+
+ line       object           ucode  source program
+
+   1    (35    1    2)     main       proc    1       2       2
+   2    (38    2    1)                sym     2       1       1
+   3    (20    0     )                ldc     0
+   4    (24    2    1)                str     2       1
+   5    (34          )     $$0        nop
+   6    (19    2    1)                lod     2       1
+   7    (20   30     )                ldc     30
+   8    (14          )                lt
+   9    (28   32     )                fjp     $$1
+  10    (19    2    1)                lod     2       1
+  11    (20   20     )                ldc     20
+  12    (17          )                eq
+  13    (28   15     )                fjp     $$3
+  14    (26   32     )                ujp     $$1
+  15    (34          )     $$3        nop
+  16    (19    2    1)                lod     2       1
+  17    (20    2     )                ldc     2
+  18    (10          )                mod
+  19    (20    0     )                ldc     0
+  20    (17          )                eq
+  21    (28   23     )                fjp     $$4
+  22    (26   27     )                ujp     $$2
+  23    (34          )     $$4        nop
+  24    (23          )                ldp
+  25    (19    2    1)                lod     2       1
+  26    (29   -2     )                call    write
+  27    (34          )     $$2        nop
+  28    (19    2    1)                lod     2       1
+  29    ( 2          )                inc
+  30    (24    2    1)                str     2       1
+  31    (26    5     )                ujp     $$0
+  32    (34          )     $$1        nop
+  33    (20    0     )                ldc     0
+  34    (31          )                retv
+  35    (36          )                end
+  36    (37    0     )                bgn     0
+  37    (23          )                ldp
+  38    (29    1     )                call    main
+  39    (36          )                end
+
+
+
+   ****    Result    ****
+
+
+ 1 3 5 7 9 11 13 15 17 19
+
+   **********************
+
+
+
+
+                 #### Statistics ####
+
+
+    ****  Static Instruction Counts  ****
+
+
+inc    =  1       mod    =  1       lt     =  1       eq     =  2       
+lod    =  5       ldc    =  6       ldp    =  2       str    =  2       
+ujp    =  3       fjp    =  3       call   =  2       retv   =  1       
+nop    =  5       proc   =  1       end    =  2       bgn    =  1       
+sym    =  1       
+
+
+  ****  Dynamic instruction counts  ****
+
+
+inc    =  20        mod    =  20        lt     =  21        eq     =  41        
+lod    =  92        ldc    =  84        ldp    =  11        str    =  21        
+ujp    =  31        fjp    =  62        call   =  11        retv   =  1         
+nop    =  72        proc   =  1         end    =  1         bgn    =  1         
+sym    =  1         
+
+ Executable instruction count  =   416
+
+ Total execution cycle         =   5675

@@ -1,6 +1,35 @@
 main       proc    1       2       2
            sym     2       1       1
-not yet implemented.
+           ldc     0
+           str     2       1
+$$0        nop
+           lod     2       1
+           ldc     30
+           lt
+           fjp     $$1
+           lod     2       1
+           ldc     20
+           eq
+           fjp     $$3
+           ujp     $$1
+$$3        nop
+           lod     2       1
+           ldc     2
+           mod
+           ldc     0
+           eq
+           fjp     $$4
+           ujp     $$2
+$$4        nop
+           ldp
+           lod     2       1
+           call    write
+$$2        nop
+           lod     2       1
+           inc
+           str     2       1
+           ujp     $$0
+$$1        nop
            ldc     0
            retv
            end

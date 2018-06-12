@@ -202,7 +202,7 @@ void rv_emit(SymbolTable *table, Node *ptr)         // 자기가 짠거임..
             foundRow = &table->rows[stIndex];
         }
 
-        if (stIndex == -1) {        // 위에 table 검사 내가 생각하기엔 2단계 인듯  아니 그냥 최상위 테이블만 검사함.. ㅇㅈ? ㅇㅈ... ㅋㅋㅋ
+        if (stIndex == -1) {
             stIndex = lookup(rootTable, ptr->token.tokenValue);
             if (stIndex != -1) {
                 foundRow = &(rootTable->rows[stIndex]);
@@ -715,9 +715,10 @@ Label controlLabel(int cmd,int type,char* label){
 
 void processStatement(SymbolTable *table, Node *ptr){
     Node *p;
+    char label1[LABEL_SIZE]={0}, label2[LABEL_SIZE]={0};
+    char label3[LABEL_SIZE]={0};
     Label escape,back;
     int case_num=0;
-    char label1[LABEL_SIZE]={0}, label2[LABEL_SIZE]={0};
 
     switch(ptr->token.tokenNumber) {
         case COMPOUND_ST:
@@ -803,16 +804,20 @@ void processStatement(SymbolTable *table, Node *ptr){
             processOperator(table,p->son);
             
             genLabel(label1); //조건문으로 돌아가기
-            genLabel(label2); //조건문 바깥으로 빠져나가기
-            controlLabel(PUSH,BACK_CONDITION,label1);
+            genLabel(label2); //escape
+            genLabel(label3); //조건 변화식으로 가기
+
+            controlLabel(PUSH,BACK_CONDITION,label3);
             controlLabel(PUSH,ESCAPE,label2);
 
             emitLabel(label1);
             processCondition(table,p->next->son); //조건문
             emitJump("fjp", label2);
 
-            processStatement(table,p->next->next); //{}
-            processCondition(table,p->next->son); //post inc
+            processStatement(table,p->next->next->next); //{}
+            emitLabel(label3);
+            processCondition(table,p->next->next);
+            
             emitJump("ujp",label1); //조건문으로 돌아가기
 
             emitLabel(label2); //{} 바깥.
@@ -916,7 +921,7 @@ void processFunction(SymbolTable *table, Node *ptr)         //func_def
             icg_error(3);
         }
     }
-
+    printf("func_name :%s\n",functionName);
     emitProc(functionName, nextTable->offset - 1, nextTable->base, 2);
 
     
@@ -945,9 +950,10 @@ void codeGen(Node *root, FILE *ucoFile)
     file = ucoFile; //
 
     rootTable = initSymbolTable();      // 심볼 테이블 초기화 & 생성
-
+    
     // step 1: process 
-    for (p = root->son; p; p = p->next) {               // AST Tree 전부 탐색 하면서
+    for (p = root->son; p; p = p->next) {
+                      // AST Tree 전부 탐색 하면서
         if (p->token.tokenNumber == DCL) {              // 변수 선언 부분이면 processDeclaration 실행
             processDeclaration(rootTable, p->son);      // root table에 변수 위치(?) 저장, p->son은 DCL_SPEC
         } else if (p->token.tokenNumber == FUNC_DEF) {  // 함수 선언 부분이면 processFunctionHeader 실행
@@ -958,14 +964,13 @@ void codeGen(Node *root, FILE *ucoFile)
     }
 
     globalSize = rootTable->offset - 1;                 // 전체 변수의 사이즈 -> globalSize
-
     // step 2: process the function part
     for (p = root->son; p; p = p->next) {               // AST Tree 전부 탐색
         if (p->token.tokenNumber == FUNC_DEF) {         //
             processFunction(rootTable, p);
         }
     }
-
+    
     display(rootTable, 0);
 
     // step 3: generate codes for starting routine
