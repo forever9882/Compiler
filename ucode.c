@@ -6,12 +6,13 @@
 
 void processOperator(SymbolTable *table, Node *ptr);
 
+//GLOBAL VARIABLE
 FILE* file;
-
 int lvalue;
 int flag_returned;
-
 SymbolTable* rootTable;
+Label labelTable[LABEL_MAX];
+
 
 void display(SymbolTable* table, int indent)
 {
@@ -64,7 +65,8 @@ void display(SymbolTable* table, int indent)
 
 void icg_error(int i)
 {
-    fprintf(stderr, "ERROR: %d\n", i);
+    printf("ERROR: %s\n",message[i])
+    fprintf(stderr, "ERROR: %s\n", message[i]);
 }
 
 void emit0(char *opcode)
@@ -236,8 +238,7 @@ void processSimpleVariable(SymbolTable *table, Node *ptr, Specifier spec, Qualif
         insert(table, p->token.tokenValue, spec, qual, 0, 0, init);         // 초기 value 값을 같이 저장.
 
     } else { // variable type
-        int size;
-        size = typeSize(spec);
+        int size= typeSize(spec);
         insert(table, p->token.tokenValue, spec, qual, table->offset, 1, 0);
         table->offset += size;
  
@@ -287,7 +288,7 @@ void processDeclaration(SymbolTable *table, Node *ptr)      //ptr => DCL_SPEC
         } else if (p->token.tokenNumber == CONST_NODE) {       // token 이 const면 qual_const
             qual = QUAL_CONST;
         } else { // AUTO, EXTERN, REGISTER, FLOAT, DOUBLE, SIGNED, UNSIGNED
-            printf("not yet implemented\n");
+            icg_error(0);
             return;
         }
         p = p->next;            // ex. int a, b, c;
@@ -311,7 +312,7 @@ void processDeclaration(SymbolTable *table, Node *ptr)      //ptr => DCL_SPEC
                 break;
 
             default:
-                printf("error in SIMPLE_VAR or ARRAY_VAR\n");
+                icg_error(6);
                 break;
         }
         p = p->next;
@@ -325,7 +326,7 @@ void processFuncHeader(SymbolTable *table, Node *ptr)           //Func_head
     Node *p;
 
     if (ptr->token.tokenNumber != FUNC_HEAD) {
-        printf("error in processFuncHeader\n");
+        icg_error(2);
     }
 
     // step 1: process the function return type
@@ -336,7 +337,7 @@ void processFuncHeader(SymbolTable *table, Node *ptr)           //Func_head
         } else if (p->token.tokenNumber == VOID_NODE) {
             returnType = SPEC_VOID;
         } else {
-            printf("invalid function return type\n");
+            icg_error(7);
         }
         p = p->next;
     }
@@ -669,8 +670,7 @@ void processOperator(SymbolTable *table, Node *ptr)
     }
 }
 
-void processCondition(SymbolTable *table, Node *ptr)
-{
+void processCondition(SymbolTable *table, Node *ptr){
     if (ptr->noderep == NONTERM) {
         processOperator(table, ptr);
     } else {
@@ -678,9 +678,32 @@ void processCondition(SymbolTable *table, Node *ptr)
     }
 }
 
-void processStatement(SymbolTable *table, Node *ptr)            // 추가 코드 구현 부분 들어가는 곳
-{
+Label controlLabel(int cmd,int type,char* label){
+    static int ltop=1;
+    labelTable[0].type=-1;
+    switch(cmd){
+        case PUSH:
+            if(ltop==LABEL_MAX){
+                icg_error(1);
+                exit(0);
+            }
+            strcpy(labelTable[ltop].label,label);
+            labelTable[ltop].type=type;
+            //printf("ltop:%d, label:%s,type:%d\n",ltop,labelTable[ltop].label,labelTable[ltop].type);
+            return labelTable[ltop++];
+        case POP:
+            if(ltop==1){
+                return labelTable[0];
+            }
+            //printf("ltop:%d, label:%s,type:%d\n",ltop,labelTable[ltop].label,labelTable[ltop].type);
+            return labelTable[--ltop];
+    }
+}
+
+void processStatement(SymbolTable *table, Node *ptr){
     Node *p;
+    Label escape,back;
+    int case_num=0;
     char label1[LABEL_SIZE]={0}, label2[LABEL_SIZE]={0};
 
     switch(ptr->token.tokenNumber) {
@@ -689,6 +712,17 @@ void processStatement(SymbolTable *table, Node *ptr)            // 추가 코드
             p = p->son;
             while (p) {
                 processStatement(table, p);
+                switch(p->token.tokenNumber){
+                    case WHILE_ST: case FOR_ST:
+                        controlLabel(POP,0,NULL);
+                        controlLabel(POP,0,NULL);
+                        break;
+                    case SWITCH_ST:
+                        controlLabel(POP,0,NULL);
+                        controlLabel(POP,0,NULL);
+                    default:
+                        break;
+                }
                 p = p->next;
             }
             break;
@@ -736,18 +770,104 @@ void processStatement(SymbolTable *table, Node *ptr)            // 추가 코드
         case WHILE_ST:
             genLabel(label1);
             genLabel(label2);
+            //printf("push back condition label %s\n",label1);
+            controlLabel(PUSH, BACK_CONDITION, label1);
+            //printf("push escape label %s\n",label2);
+            controlLabel(PUSH, ESCAPE, label2);
+
             emitLabel(label1);
             processCondition(table, ptr->son);
-            emitJump("fjp", label2);
 
-            processStatement(table, ptr->son->next);
+            emitJump("fjp", label2); //조건문 바깥으로 빠져나가기
+            processStatement(table, ptr->son->next);    // compound_st
 
-            emitJump("ujp", label1);
+            emitJump("ujp", label1); // 조건문으로 돌아가기
             emitLabel(label2);
 	        break;
 
+        case FOR_ST:
+            p=ptr->son; //EXP_ST
+            processOperator(table,p->son);
+            
+            genLabel(label1); //조건문으로 돌아가기
+            genLabel(label2); //조건문 바깥으로 빠져나가기
+            controlLabel(PUSH,BACK_CONDITION,label1);
+            controlLabel(PUSH,ESCAPE,label2);
+
+            emitLabel(label1);
+            processCondition(table,p->next->son); //조건문
+            emitJump("fjp", label2);
+
+            processStatement(table,p->next->next); //{}
+            processCondition(table,p->next->son); //post inc
+            emitJump("ujp",label1); //조건문으로 돌아가기
+
+            emitLabel(label2); //{} 바깥.
+            break;
+
+        case SWITCH_ST:
+            genLabel(label2); //escape
+            //printf("switch escape label name is %s\n",label2);
+            controlLabel(PUSH,BACK_CONDITION,"");
+            controlLabel(PUSH,ESCAPE,label2);
+
+            p=ptr->son->next; //compound_st
+            p=p->son->next; //stat_list
+            p=p->son; // case_st
+            
+            while(p){
+                if(p->token.tokenNumber==CASE_ST)
+                    case_num++;
+                p=p->next;
+            }
+            //printf("826. case_num: %d\n",case_num);
+            processCondition(table,ptr->son);
+            for(int i=1;i<case_num;i++){ //1개 작게
+                emit0("dup");
+            }
+            processStatement(table,ptr->son->next);
+            emitLabel(label2);
+            break;
+
+        case CASE_ST:
+            genLabel(label1);
+            p=ptr->son;
+            processCondition(table,p);
+            emit0("eq");
+            emitJump("fjp",label1);
+            processStatement(table,p->next);
+            emitLabel(label1);
+            break;
+
+        case DEFAULT_ST:
+            processStatement(table,ptr->son);
+            break;
+
+        case BREAK:
+            escape = controlLabel(POP,0,NULL);
+            //printf("break;pop escape label %s\n",escape.label);
+
+            if(escape.type!=-1){
+                //-1이면 빠져나갈 곳이 없으므로 무시
+                emitJump("ujp",escape.label);
+                controlLabel(PUSH,ESCAPE,escape.label);
+                break;
+            }
+            break;
+
+        case CONTINUE:
+            escape=controlLabel(POP,0,NULL);
+            back=controlLabel(POP,0,NULL);
+            if(back.type!=-1){
+                //-1이면 돌아갈 곳이 없으므로 무시
+                emitJump("ujp",back.label);
+                controlLabel(PUSH,BACK_CONDITION,back.label);
+                controlLabel(PUSH,ESCAPE,escape.label);
+            }
+            break;
+
         default:
-            fprintf(file, "not yet implemented.\n");
+            icg_error(0);
             break;
     }
 }
@@ -772,7 +892,7 @@ void processFunction(SymbolTable *table, Node *ptr)         //func_def
             if (p->token.tokenNumber == PARAM_DCL) {
                 processDeclaration(nextTable, p->son); // todo
             } else {
-                icg_error(9);
+                icg_error(8);
             }
         }
     }

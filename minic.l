@@ -1,7 +1,5 @@
 %{
 /* lex source for Mini C */
-//#include <stdio.h>
-//#include <stdlib.h>
 #include "minic.tab.h"
 
 char* toString(char* temp);
