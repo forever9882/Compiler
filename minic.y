@@ -439,7 +439,7 @@ default_st: TDEFAULT ':' statement {
     }
     ;
 
-case_st: TCASE logical_or_exp ':' statement {
+case_st: TCASE logical_or_exp ':' opt_dcl_list opt_stat_list {
         appendNext($2,$4);
         $$ = buildTree(CASE_ST,$2);
     }
